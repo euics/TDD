@@ -1,6 +1,11 @@
 package com.example.membership.controller.test;
 
 import com.example.membership.controller.MembershipController;
+import com.example.membership.domain.Membership;
+import com.example.membership.exception.GlobalExceptionHandler;
+import com.example.membership.exception.MembershipException;
+import com.example.membership.service.MembershipService;
+import com.example.membership.util.MembershipErrorResult;
 import com.example.membership.util.MembershipType;
 import com.example.membership.vo.MembershipRequest;
 import com.google.gson.Gson;
@@ -9,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -18,12 +24,15 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static com.example.membership.util.MembershipConstants.USER_ID_HEADER;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 public class MembershipControllerTest {
     @InjectMocks
     private MembershipController target;
+    @Mock
+    private MembershipService membershipService;
 
     private MockMvc mockMvc;
     private Gson gson;
@@ -32,6 +41,7 @@ public class MembershipControllerTest {
     public void init() {
         gson = new Gson();
         mockMvc = MockMvcBuilders.standaloneSetup(target)
+                .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
 
@@ -107,6 +117,27 @@ public class MembershipControllerTest {
                 MockMvcRequestBuilders.post(url)
                         .header(USER_ID_HEADER, "12345")
                         .content(gson.toJson(membershipRequest(10_000, null)))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        // then
+        resultActions.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("멤버십등록실패_MemberService에서에러Throw")
+    public void 멤버십등록실패_MemberService에서에러Throw() throws Exception {
+        // given
+        final String url = "/api/v1/memberships";
+        doThrow(new MembershipException(MembershipErrorResult.DUPLICATE_MEMBERSHIP_REGISTER))
+                .when(membershipService)
+                .addMembership("12345", MembershipType.NAVER, 10_000);
+
+        // when
+        final ResultActions resultActions = mockMvc.perform(
+                MockMvcRequestBuilders.post(url)
+                        .header(USER_ID_HEADER, "12345")
+                        .content(gson.toJson(membershipRequest(10_000, MembershipType.NAVER)))
                         .contentType(MediaType.APPLICATION_JSON)
         );
 
