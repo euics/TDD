@@ -4,7 +4,7 @@ import com.example.membership.domain.Membership;
 import com.example.membership.exception.MembershipException;
 import com.example.membership.repository.MembershipRepository;
 import com.example.membership.service.MembershipService;
-import com.example.membership.service.vo.MembershipResponse;
+import com.example.membership.vo.MembershipResponse;
 import com.example.membership.util.MembershipErrorResult;
 import com.example.membership.util.MembershipType;
 import org.junit.jupiter.api.DisplayName;
