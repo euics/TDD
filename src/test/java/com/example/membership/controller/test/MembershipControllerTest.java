@@ -7,6 +7,7 @@ import com.example.membership.exception.MembershipException;
 import com.example.membership.service.MembershipService;
 import com.example.membership.util.MembershipErrorResult;
 import com.example.membership.util.MembershipType;
+import com.example.membership.vo.MembershipDetailResponse;
 import com.example.membership.vo.MembershipRequest;
 import com.example.membership.vo.MembershipResponse;
 import com.google.gson.Gson;
@@ -27,6 +28,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 import static com.example.membership.util.MembershipConstants.USER_ID_HEADER;
@@ -215,5 +217,41 @@ public class MembershipControllerTest {
                 .point(point)
                 .membershipType(membershipType)
                 .build();
+    }
+
+    @Test
+    @DisplayName("멤버십목록조회실패_사용자식별값이헤더에없음")
+    public void 멤버십목록조회실패_사용자식별값이헤더에없음() throws Exception {
+        // given
+        final String url = "/api/v1/memberships";
+
+        // when
+        final ResultActions resultActions = mockMvc.perform(
+                MockMvcRequestBuilders.get(url)
+        );
+
+        // then
+        resultActions.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("멤버십목록조회성공")
+    public void 멤버십목록조회성공() throws Exception {
+        // given
+        final String url = "/api/v1/memberships";
+        doReturn(Arrays.asList(
+                MembershipDetailResponse.builder().build(),
+                MembershipDetailResponse.builder().build(),
+                MembershipDetailResponse.builder().build()
+        )).when(membershipService).getMembershipList("12345");
+
+        // when
+        final ResultActions resultActions = mockMvc.perform(
+                MockMvcRequestBuilders.get(url)
+                        .header(USER_ID_HEADER, "12345")
+        );
+
+        // then
+        resultActions.andExpect(status().isOk());
     }
 }
