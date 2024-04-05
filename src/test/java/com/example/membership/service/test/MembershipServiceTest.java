@@ -4,6 +4,7 @@ import com.example.membership.domain.Membership;
 import com.example.membership.exception.MembershipException;
 import com.example.membership.repository.MembershipRepository;
 import com.example.membership.service.MembershipService;
+import com.example.membership.vo.MembershipDetailResponse;
 import com.example.membership.vo.MembershipResponse;
 import com.example.membership.util.MembershipErrorResult;
 import com.example.membership.util.MembershipType;
@@ -13,6 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -59,6 +63,23 @@ public class MembershipServiceTest {
         // verify
         verify(membershipRepository, times(1)).findByUserIdAndMembershipType(userId, membershipType);
         verify(membershipRepository, times(1)).save(any(Membership.class));
+    }
+
+    @Test
+    public void 멤버십목록조회() {
+        // given
+        doReturn(Arrays.asList(
+                Membership.builder().build(),
+                Membership.builder().build(),
+                Membership.builder().build()
+        )).when(membershipRepository).findAllByUserId(userId);
+
+        // when
+        final List<MembershipDetailResponse> result = target.getMembershipList(userId);
+
+        // then
+        assertThat(result.size()).isEqualTo(3);
+
     }
 
     private Membership membership() {
